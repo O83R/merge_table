@@ -14,13 +14,13 @@ abstract class BaseMColumn {
 
 class MColumn extends BaseMColumn {
   MColumn({
-    required String header,
+    required Widget header,
   }) : super(header: header, columns: null);
 }
 
 class MMergedColumns extends BaseMColumn {
   @override
-  List<String> get columns => super.columns!;
+  List<Widget> get columns => super.columns!;
 
   MMergedColumns({
     required Widget header,
