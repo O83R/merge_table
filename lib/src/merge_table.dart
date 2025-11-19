@@ -6,10 +6,10 @@ class MergeTable extends StatelessWidget {
     required this.rows,
     required this.columns,
     required this.borderColor,
-    this.rowHeight,
-    this.headerColor,
-    this.columnsColor,
-    this.rowsColor,
+    required this.rowHeight,
+    required this.headerColor,
+    required this.columnsColor,
+    required this.rowsColor,
     this.alignment = MergeTableAlignment.center,
   }) : super(key: key) {
     columnWidths = fetchColumnWidths(columns);
@@ -19,14 +19,14 @@ class MergeTable extends StatelessWidget {
       assert(row.length == columns.length);
     }
   }
-  final Color headerColor = Colors.transparent;
-  final Color columnsColor = Colors.transparent;
-  final Color rowsColor = Colors.transparent;
+  final Color headerColor;
+  final Color columnsColor;
+  final Color rowsColor ;
   final Color borderColor;
   final List<BaseMColumn> columns;
   final List<List<BaseMRow>> rows;
   final MergeTableAlignment alignment;
-  final double? rowHeight;
+  final double rowHeight;
   late final Map<int, TableColumnWidth> columnWidths;
 
   TableCellVerticalAlignment get defaultVerticalAlignment => alignment.tableAlignment;
