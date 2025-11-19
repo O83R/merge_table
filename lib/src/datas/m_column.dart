@@ -1,8 +1,8 @@
 part of merge_table;
 
 abstract class BaseMColumn {
-  final String header;
-  final List<String>? columns;
+  final Widget header;
+  final List<Widget>? columns;
 
   bool get isMergedColumn => columns != null;
 
@@ -23,7 +23,7 @@ class MMergedColumns extends BaseMColumn {
   List<String> get columns => super.columns!;
 
   MMergedColumns({
-    required String header,
-    required List<String> columns,
+    required Widget header,
+    required List<Widget> columns,
   }) : super(columns: columns, header: header);
 }
