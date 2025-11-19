@@ -92,13 +92,13 @@ class MergeTable extends StatelessWidget {
         buildMutiColumns(
           List.generate(column.columns!.length, (index) {
             return buildSingleColumn(column.columns![index],columnsColor);
-          }),
+          }),columnsColor,
         ),
       ],
     );
   }
 
-  Widget buildMutiColumns(List<Widget> values,Color color) {
+  Widget buildMutiColumns(List<Widget> values, Color color) {
     return LayoutBuilder(builder: (context, constriant) {
       List<Widget> children = List.generate(values.length, (index) {
         Widget value = values[index];
@@ -110,7 +110,7 @@ class MergeTable extends StatelessWidget {
       });
       return Container(
         height: rowHeight,
-        decoration: BoxDecoration(color: rowsColor ),
+        decoration: BoxDecoration(color: color ),
         child: IntrinsicHeight(
           child: Row(
             mainAxisSize: MainAxisSize.min,
