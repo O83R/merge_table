@@ -1,3 +1,4 @@
+// file: merge_table.dart
 part of merge_table;
 
 class MergeTable extends StatelessWidget {
@@ -12,24 +13,30 @@ class MergeTable extends StatelessWidget {
     required this.rowsColor,
     this.alignment = MergeTableAlignment.center,
   }) : super(key: key) {
-    columnWidths = fetchColumnWidths(columns);
     assert(columns.isNotEmpty);
     assert(rows.isNotEmpty);
-    for (List<BaseMRow> row in rows) {
+
+    // تحقق أن كل صف له نفس عدد الأعمدة
+    for (final row in rows) {
       assert(row.length == columns.length);
     }
+
+    columnWidths = _buildColumnWidths(columns);
   }
+
   final Color headerColor;
   final Color columnsColor;
-  final Color rowsColor ;
+  final Color rowsColor;
   final Color borderColor;
   final List<BaseMColumn> columns;
   final List<List<BaseMRow>> rows;
   final MergeTableAlignment alignment;
   final double rowHeight;
+
   late final Map<int, TableColumnWidth> columnWidths;
 
-  TableCellVerticalAlignment get defaultVerticalAlignment => alignment.tableAlignment;
+  TableCellVerticalAlignment get defaultVerticalAlignment =>
+      alignment.tableAlignment;
   AlignmentGeometry get alignmentGeometry => alignment.geometry;
 
   @override
@@ -39,117 +46,122 @@ class MergeTable extends StatelessWidget {
       columnWidths: columnWidths,
       defaultVerticalAlignment: defaultVerticalAlignment,
       children: [
-        buildHeader(),
-        ...buildRows(),
+        _buildHeader(),
+        ..._buildRows(),
       ],
     );
   }
 
-  TableRow buildHeader() {
+  /// Header row
+  TableRow _buildHeader() {
     return TableRow(
-      children: List.generate(
-        columns.length,
-        (index) {
-          BaseMColumn column = columns[index];
-          if (column.columns != null) {
-            return buildMergedColumn(column);
-          } else {
-            return buildSingleColumn(column.header);
-          }
-        },
-      ),
+      children: List.generate(columns.length, (i) {
+        final column = columns[i];
+
+        if (column.isMergedColumn) {
+          return _buildMergedColumn(column);
+        }
+        return _buildSingleCell(column.header, headerColor);
+      }),
     );
   }
 
-  List<TableRow> buildRows() {
-    return List.generate(
-      rows.length,
-      (index) {
-        List<BaseMRow> values = rows[index];
-        return TableRow(
-          children: List.generate(
-            values.length,
-            (index) {
-              BaseMRow item = values[index];
-              bool isMergedColumn = item.inlineRow.length > 1;
-              if (isMergedColumn) {
-                return buildMutiColumns(item.inlineRow,rowsColor);
-              } else {
-                return buildAlign(item.inlineRow.first,rowsColor);
-              }
-            },
+  /// Data rows
+  List<TableRow> _buildRows() {
+    return List.generate(rows.length, (rowIndex) {
+      final items = rows[rowIndex];
+
+      return TableRow(
+        children: List.generate(items.length, (colIndex) {
+          final item = items[colIndex];
+
+          if (item.inlineRow.length > 1) {
+            return _buildMultiColumns(
+              item.inlineRow,
+              rowsColor,
+            );
+          }
+
+          return _buildSingleCell(item.inlineRow.first, rowsColor);
+        }),
+      );
+    });
+  }
+
+  /// Column with sub-columns under it
+  Widget _buildMergedColumn(BaseMColumn column) {
+    return Column(
+      children: [
+        _buildSingleCell(column.header, headerColor),
+        Divider(color: borderColor, height: 1, thickness: 1),
+        _buildMultiColumns(
+          List.generate(
+            column.columns!.length,
+            (i) => column.columns![i],
+          ),
+          columnsColor,
+        ),
+      ],
+    );
+  }
+
+  /// Multi-column builder for merged rows/headers
+  Widget _buildMultiColumns(List<Widget> values, Color background) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double colWidth = constraints.maxWidth / values.length;
+
+        final children = List.generate(values.length, (i) {
+          return SizedBox(
+            width: colWidth,
+            child: _buildSingleCell(values[i], background),
+          );
+        });
+
+        return Container(
+          height: rowHeight,
+          decoration: BoxDecoration(color: background),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                for (var i = 0; i < children.length - 1; i++) ...[
+                  children[i],
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: borderColor,
+                  ),
+                ],
+                children.last,
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget buildMergedColumn(BaseMColumn column) {
-    return Column(
-      children: [
-        buildSingleColumn(column.header,headerColor),
-        Divider(color: borderColor, height: 1, thickness: 1),
-        buildMutiColumns(
-          List.generate(column.columns!.length, (index) {
-            return buildSingleColumn(column.columns![index],columnsColor);
-          }),columnsColor,
-        ),
-      ],
-    );
-  }
-
-  Widget buildMutiColumns(List<Widget> values, Color color) {
-    return LayoutBuilder(builder: (context, constriant) {
-      List<Widget> children = List.generate(values.length, (index) {
-        Widget value = values[index];
-        double spaceForBorder = (values.length - 1) / values.length;
-        return SizedBox(
-          width: constriant.maxWidth / values.length - spaceForBorder,
-          child: buildAlign(value,color),
-        );
-      });
-      return Container(
-        height: rowHeight,
-        decoration: BoxDecoration(color: color ),
-        child: IntrinsicHeight(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (Widget child in children.take(children.length - 1)) ...[
-                child,
-                VerticalDivider(width: 1, color: borderColor, thickness: 1)
-              ],
-              children.last,
-            ],
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget buildSingleColumn(Widget title,Color color) {
-    return buildAlign(title,color);
-  }
-
-  Widget buildAlign(Widget child,Color color) {
+  /// Basic cell
+  Widget _buildSingleCell(Widget child, Color color) {
     return Container(
-      decoration: BoxDecoration(color: color),
       alignment: alignmentGeometry,
+      decoration: BoxDecoration(color: color),
       child: child,
     );
   }
 
-  Map<int, TableColumnWidth> fetchColumnWidths(List<BaseMColumn> columns) {
-    Map<int, TableColumnWidth> columnWidths = {};
-    double flexPerColumn = 1 / columns.length;
+  /// Calculate table column widths
+  Map<int, TableColumnWidth> _buildColumnWidths(List<BaseMColumn> columns) {
+    final widths = <int, TableColumnWidth>{};
+
     for (int i = 0; i < columns.length; i++) {
-      BaseMColumn column = columns[i];
-      if (column.isMergedColumn) {
-        columnWidths[i] = FlexColumnWidth(flexPerColumn * column.columns!.length);
-      } else {
-        columnWidths[i] = FlexColumnWidth(flexPerColumn);
-      }
+      final col = columns[i];
+
+      /// why: نمنح الأعمدة المدموجة flex أكبر لأنها تحتوي أكثر من حقل
+      widths[i] = FlexColumnWidth(
+        col.isMergedColumn ? col.columns!.length.toDouble() : 1,
+      );
     }
-    return columnWidths;
+    return widths;
   }
 }
