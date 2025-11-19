@@ -121,8 +121,8 @@ class MergeTable extends StatelessWidget {
     });
   }
 
-  Widget buildSingleColumn(String title) {
-    return buildAlign(Text(title));
+  Widget buildSingleColumn(Widget title) {
+    return buildAlign(title);
   }
 
   Widget buildAlign(Widget child) {
