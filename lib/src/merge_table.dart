@@ -7,6 +7,9 @@ class MergeTable extends StatelessWidget {
     required this.columns,
     required this.borderColor,
     this.rowHeight,
+    this.headerColor,
+    this.columnsColor,
+    this.rowsColor,
     this.alignment = MergeTableAlignment.center,
   }) : super(key: key) {
     columnWidths = fetchColumnWidths(columns);
@@ -16,7 +19,9 @@ class MergeTable extends StatelessWidget {
       assert(row.length == columns.length);
     }
   }
-
+  final Color headerColor = Colors.transparent;
+  final Color columnsColor = Colors.transparent;
+  final Color rowsColor = Colors.transparent;
   final Color borderColor;
   final List<BaseMColumn> columns;
   final List<List<BaseMRow>> rows;
@@ -68,9 +73,9 @@ class MergeTable extends StatelessWidget {
               BaseMRow item = values[index];
               bool isMergedColumn = item.inlineRow.length > 1;
               if (isMergedColumn) {
-                return buildMutiColumns(item.inlineRow);
+                return buildMutiColumns(item.inlineRow,rowsColor);
               } else {
-                return buildAlign(item.inlineRow.first);
+                return buildAlign(item.inlineRow.first,rowsColor);
               }
             },
           ),
@@ -82,29 +87,30 @@ class MergeTable extends StatelessWidget {
   Widget buildMergedColumn(BaseMColumn column) {
     return Column(
       children: [
-        buildSingleColumn(column.header),
+        buildSingleColumn(column.header,headerColor),
         Divider(color: borderColor, height: 1, thickness: 1),
         buildMutiColumns(
           List.generate(column.columns!.length, (index) {
-            return buildSingleColumn(column.columns![index]);
+            return buildSingleColumn(column.columns![index],columnsColor);
           }),
         ),
       ],
     );
   }
 
-  Widget buildMutiColumns(List<Widget> values) {
+  Widget buildMutiColumns(List<Widget> values,Color color) {
     return LayoutBuilder(builder: (context, constriant) {
       List<Widget> children = List.generate(values.length, (index) {
         Widget value = values[index];
         double spaceForBorder = (values.length - 1) / values.length;
         return SizedBox(
           width: constriant.maxWidth / values.length - spaceForBorder,
-          child: buildAlign(value),
+          child: buildAlign(value,color),
         );
       });
       return Container(
         height: rowHeight,
+        decoration: BoxDecoration(color: rowsColor ),
         child: IntrinsicHeight(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -121,12 +127,13 @@ class MergeTable extends StatelessWidget {
     });
   }
 
-  Widget buildSingleColumn(Widget title) {
-    return buildAlign(title);
+  Widget buildSingleColumn(Widget title,Color color) {
+    return buildAlign(title,color);
   }
 
-  Widget buildAlign(Widget child) {
+  Widget buildAlign(Widget child,Color color) {
     return Container(
+      decoration: BoxDecoration(color: color),
       alignment: alignmentGeometry,
       child: child,
     );
